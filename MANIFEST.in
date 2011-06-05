@@ -1,0 +1,7 @@
+global-include *
+global-exclude *.pyc .gitignore MANIFEST.in MANIFEST
+prune termtool.egg-info
+prune docs/_build
+prune .env
+prune .git
+prune dist
