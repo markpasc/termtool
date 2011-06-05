@@ -25,6 +25,14 @@ def argument(*args, **kwargs):
     return decor
 
 
+class PrettierTable(PrettyTable):
+
+    def __init__(self, fields=None, **kwargs):
+        PrettyTable.__init__(self, fields, **kwargs)
+        for field in fields:
+            self.set_field_align(field, 'l')
+
+
 class TermtoolMetaclass(type):
 
     def __new__(cls, name, bases, attrs):
@@ -42,7 +50,7 @@ class Termtool(object):
     __metaclass__ = TermtoolMetaclass
 
     progressbar = ProgressBar
-    table = PrettyTable
+    table = PrettierTable
 
     def _load_config_args(self):
         appname = type(self).__name__.lower()
