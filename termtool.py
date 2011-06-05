@@ -1,16 +1,6 @@
-from __future__ import division
-
-from datetime import datetime
-from itertools import chain, count, izip
-from functools import wraps
 import logging
-import os
 import os.path
-from random import shuffle
-import readline
 import sys
-from urllib import urlencode
-from urlparse import parse_qsl, urlunsplit
 
 import argparse
 from prettytable import PrettyTable
