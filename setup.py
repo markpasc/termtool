@@ -4,10 +4,10 @@ from distutils.core import setup
 long_description = """
 `termtool` helps you write subcommand-based command line tools in Python. It collects several Python libraries into a declarative syntax:
 
-* :mod:`argparse`, the argument parsing module with subcommand support provided in the standard library in Python 2.7 and later.
+* `argparse`, the argument parsing module with subcommand support provided in the standard library in Python 2.7 and later.
 * `prettytable <http://code.google.com/p/python-progressbar/>`_, an easy module for building tables of information.
 * `progressbar <http://code.google.com/p/python-progressbar/>`_, a handy module for displaying progress bars.
-* :mod:`logging`, the simple built-in module for logging messages.
+* `logging`, the simple built-in module for logging messages.
 """
 
 
