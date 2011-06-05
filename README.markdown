@@ -18,6 +18,6 @@ If you don't want to install its dependencies system-wide, try installing it in 
 
 ## Usage ##
 
-See `bin/rdio`, a converted version of [`rdio-cli`][rdio-cli], for an example script.
+See [the full documentation][docs] for usage information.
 
-[rdio-cli]: https://github.com/markpasc/rdio-cli
+[docs]: http://readthedocs.org/docs/termtool/en/latest/guide.html
