@@ -8,6 +8,9 @@ from prettytable import PrettyTable
 from progressbar import ProgressBar
 
 
+__version__ = '1.0'
+
+
 def subcommand(*args, **kwargs):
     def decor(fn):
         fn._subcommand = (args, kwargs)
