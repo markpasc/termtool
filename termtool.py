@@ -28,10 +28,11 @@ def argument(*args, **kwargs):
 
 class PrettierTable(PrettyTable):
 
-    def __init__(self, fields=None, **kwargs):
-        PrettyTable.__init__(self, fields, **kwargs)
-        for field in fields:
-            self.set_field_align(field, 'l')
+    def __init__(self, field_names=None, **kwargs):
+        PrettyTable.__init__(self, field_names, **kwargs)
+        if field_names is not None:
+            for field in field_names:
+                self.set_field_align(field, 'l')
 
 
 class TermtoolMetaclass(type):
