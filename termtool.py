@@ -105,3 +105,6 @@ class Termtool(object):
             return 1
 
         return 0
+
+    def run(self):
+        sys.exit(self.main(sys.argv[1:]))
