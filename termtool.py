@@ -36,12 +36,8 @@ class PrettierTable(PrettyTable):
 class TermtoolMetaclass(type):
 
     def __new__(cls, name, bases, attrs):
-        subcommands = list()
-        for attr in attrs.itervalues():
-            if hasattr(attr, '_subcommand'):
-                subcommands.append(attr)
-        attrs['_subcommands'] = subcommands
-
+        attrs['_subcommands'] = [attr for attr in attrs.itervalues()
+            if hasattr(attr, '_subcommand')]
         return super(TermtoolMetaclass, cls).__new__(cls, name, bases, attrs)
 
 
