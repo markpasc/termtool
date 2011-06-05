@@ -1,4 +1,5 @@
 import logging
+import os
 import os.path
 import sys
 
@@ -48,7 +49,18 @@ class Termtool(object):
     progressbar = ProgressBar
     table = PrettierTable
 
-    def _load_config_args(self):
+    def write_config_file(self, *args):
+        appname = type(self).__name__.lower()
+        filepath = os.path.expanduser('~/.%s' % appname)
+
+        # Don't let anybody else read the config file.
+        os.umask(077)
+        with open(filepath, 'w') as config_file:
+            for arg in args:
+                config_file.write(arg)
+                config_file.write('\n')
+
+    def read_config_file(self):
         appname = type(self).__name__.lower()
         filepath = os.path.expanduser('~/.%s' % appname)
         if not os.path.exists(filepath):
@@ -59,7 +71,7 @@ class Termtool(object):
         return config_args
 
     def main(self, argv):
-        config_args = self._load_config_args()
+        config_args = self.read_config_file()
         args = config_args + argv
 
         parser = argparse.ArgumentParser(description=getattr(self, 'description', ''))

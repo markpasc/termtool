@@ -199,3 +199,19 @@ a configuration file specifying these API tokens would be a file named `~/.examp
    --access-token
    uo9lctpryiscvujgab0cvns860xlg3
 
+If your tool has specific arguments you may want people using it to save for later, you can use :meth:`~termtool.Termtool.write_config_file` in another command (such as `configure`) to write one out. Pass all the arguments you'd like to write out, and :class:`~termtool.Termtool` will overwrite the config file with the new settings. The file is created with umask 077 so that it's readable only by the owner.
+
+::
+
+   @subcommand()
+   def configure(self, args):
+       if not args.access_token:
+           args.access_token = self.request_access_token(args)
+
+       self.write_config_file(
+           '--consumer-key', args.consumer_key,
+           '--consumer-secret', args.consumer_secret,
+           '--access-token', args.access_token,
+       )
+
+       logging.info("Configured!")
