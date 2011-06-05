@@ -77,6 +77,8 @@ The arguments to the :func:`termtool.subcommand` decorator describe the subcomma
 
 Arguments themselves are declared with the :func:`termtool.argument` decorator. Subcommand arguments are declared with :meth:`ArgumentParser.add_argument <argparse.ArgumentParser.add_argument>`, so all its arguments are valid for the :func:`~termtool.argument` decorator.
 
+Even though decorators are evaluated closest-first, arguments are added in the order they appear in your source file (that is, in reverse order of how they evaluate). Declare positional arguments in reading order, first argument first.
+
 Arguments that should be available in general to all commands can be specified as class decorators (in scripts for Python 2.6 and greater)::
 
    @argument('baz', help='the baz to frob or display')

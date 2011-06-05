@@ -83,6 +83,7 @@ class Termtool(object):
         except AttributeError:
             pass
         else:
+            # Add arguments in the order they were declared.
             for arg_args, arg_kwargs in reversed(class_arguments):
                 parser.add_argument(*arg_args, **arg_kwargs)
 
@@ -104,6 +105,7 @@ class Termtool(object):
             except AttributeError:
                 pass
             else:
+                # Add arguments in the order they were declared.
                 for arg_args, arg_kwargs in reversed(arguments):
                     subparser.add_argument(*arg_args, **arg_kwargs)
 
