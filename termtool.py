@@ -91,7 +91,7 @@ class Termtool(object):
             for arg_args, arg_kwargs in reversed(class_arguments):
                 parser.add_argument(*arg_args, **arg_kwargs)
 
-        subparsers = parser.add_subparsers(dest='subcommand', title='subcommands', metavar='COMMAND')
+        subparsers = parser.add_subparsers(dest='subcommand', title='subcommands', metavar='')
 
         for command in self._subcommands:
             try:
