@@ -13,7 +13,15 @@ __version__ = '1.0'
 
 def subcommand(*args, **kwargs):
     def decor(fn):
-        fn._subcommand = (args, kwargs)
+        pargs = list(args)
+        try:
+            name = pargs.pop(0)
+        except IndexError:
+            try:
+                name = kwargs.pop('name')
+            except KeyError:
+                name = fn.__name__
+        fn._subcommand = (name, pargs, kwargs)
         return fn
     return decor
 
@@ -93,14 +101,9 @@ class Termtool(object):
 
         subparsers = parser.add_subparsers(dest='subcommand', title='subcommands', metavar='')
 
-        for command in self._subcommands:
-            try:
-                about_args, about_kwargs = command._subcommand
-            except AttributeError:
-                about_args, about_kwargs = (), {}
-            if not about_args:
-                about_args = (command.__name__,)
-            subparser = subparsers.add_parser(*about_args, **about_kwargs)
+        for command in sorted(self._subcommands, key=lambda c: c._subcommand[0]):
+            name, about_args, about_kwargs = command._subcommand
+            subparser = subparsers.add_parser(name, *about_args, **about_kwargs)
 
             subparser.set_defaults(func=command)
 
