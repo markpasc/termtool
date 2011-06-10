@@ -8,7 +8,7 @@ from prettytable import PrettyTable
 from progressbar import ProgressBar
 
 
-__version__ = '1.0'
+__version__ = '1.1dev'
 
 
 def subcommand(*args, **kwargs):
