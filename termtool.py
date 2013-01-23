@@ -136,24 +136,16 @@ class Termtool(object):
             config_args = [line.strip('\n') for line in config_file.readlines()]
         return config_args
 
-    def main(self, argv):
-        """Perform the tool's functions, given the specified command line
-        arguments.
+    def build_arg_parser(self):
+        """Build and return the `argparse.ArgumentParser` instance suitable for
+        parsing arguments for this `Termtool` instance.
 
-        This method reads the instance's config file with the
-        `read_config_file()` method, adds the arguments specified in `argv`,
-        and performs the subcommand identified there.
-
-        The method returns an integer exit code suitable for using with
-        `sys.exit()`. That is, `main()` returns ``1`` if the command terminates
-        abnormally and ``0`` otherwise. However if ``--help`` or invalid
-        arguments are specified, the process is terminated by `argparse`
-        instead and `main()` will not return.
+        The instance's subcommands and arguments are evaluated, with the
+        subcommands added as subparsers. The `ArgumentParser` also supports
+        ``-v`` and ``-q`` options for controlling the `logging` module log
+        level.
 
         """
-        config_args = self.read_config_file()
-        args = config_args + argv
-
         # Arguments after the subcommand are parsed by the subparser only, so
         # specify the global options in a parent parser so they're valid both
         # before and after the subcommand.
@@ -194,14 +186,52 @@ class Termtool(object):
                 for arg_args, arg_kwargs in reversed(arguments):
                     subparser.add_argument(*arg_args, **arg_kwargs)
 
-        args = parser.parse_args(args)
+        return parser
 
+    def _configure_logging(self, args):
+        """Configure the `logging` module to the log level requested in the
+        specified `argparse.Namespace` instance.
+
+        The `args` namespace's ``verbosity`` should be a list of integers, the
+        sum of which specifies which log level to use: sums from 0 to 4
+        inclusive map to the standard `logging` log levels from
+        `logging.CRITICAL` to `logging.DEBUG`. If the ``verbosity`` list sums
+        to less than 0, level `logging.CRITICAL` is still used; for more than
+        4, `logging.DEBUG`.
+
+        """
         verbosity = sum(args.verbosity)
         verbosity = 0 if verbosity < 0 else verbosity if verbosity < 4 else 4
         log_level = (logging.CRITICAL, logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG)[verbosity]
         logging.basicConfig(level=log_level, format='%(levelname)s: %(message)s')
         logging.info('Set log level to %s', logging.getLevelName(log_level))
 
+    def main(self, argv):
+        """Perform the tool's functions, given the specified command line
+        arguments.
+
+        This method reads the instance's config file with the
+        `read_config_file()` method, adds the arguments specified in `argv`,
+        and performs the subcommand identified there.
+
+        The method returns an integer exit code suitable for using with
+        `sys.exit()`. That is, `main()` returns ``0`` if the subcommand
+        completes successfully, or ``1`` if the command is interrupted from the
+        terminal (that is, the terminal user presses ctrl-C to raise
+        `KeyboardInterrupt`). However if ``--help`` or invalid arguments are
+        specified, the process is terminated by `argparse` instead and `main()`
+        will not return.
+
+        """
+        config_args = self.read_config_file()
+        args = config_args + argv
+
+        parser = self.build_arg_parser()
+        args = parser.parse_args(args)
+
+        self._configure_logging(args)
+
+        # The callable subcommand is parsed out as the "func" arg.
         try:
             args.func(self, args)
         except KeyboardInterrupt:
