@@ -51,13 +51,19 @@ def argument(*args, **kwargs):
     return _decor
 
 
-class PrettierTable(PrettyTable):
+class _PrettierTable(PrettyTable):
 
     def __init__(self, field_names=None, **kwargs):
         PrettyTable.__init__(self, field_names, **kwargs)
-        if field_names is not None:
-            for field in field_names:
-                self.set_field_align(field, 'l')
+        try:
+            self.set_field_align
+        except AttributeError:
+            # We must be using PrettyTable 0.6+.
+            self.align = 'l'
+        else:
+            if field_names is not None:
+                for field in field_names:
+                    self.set_field_align(field, 'l')
 
 
 class _TermtoolMetaclass(type):
@@ -93,7 +99,7 @@ class Termtool(object):
     __metaclass__ = _TermtoolMetaclass
 
     progressbar = ProgressBar
-    table = PrettierTable
+    table = _PrettierTable
 
     def write_config_file(self, *args):
         """Write out a config file containing the given arguments.
