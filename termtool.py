@@ -154,10 +154,13 @@ class Termtool(object):
         config_args = self.read_config_file()
         args = config_args + argv
 
-        parser = argparse.ArgumentParser(description=getattr(self, 'description', ''))
-        parser.set_defaults(verbosity=[2], subcommand='help')
-        parser.add_argument('-v', dest='verbosity', action='append_const', const=1, help='be more verbose (stackable)')
-        parser.add_argument('-q', dest='verbosity', action='append_const', const=-1, help='be less verbose (stackable)')
+        # Arguments after the subcommand are parsed by the subparser only, so
+        # specify the global options in a parent parser so they're valid both
+        # before and after the subcommand.
+        global_parser = argparse.ArgumentParser(add_help=False)
+        global_parser.set_defaults(verbosity=[2])
+        global_parser.add_argument('-v', dest='verbosity', action='append_const', const=1, help='be more verbose (stackable)')
+        global_parser.add_argument('-q', dest='verbosity', action='append_const', const=-1, help='be less verbose (stackable)')
         try:
             class_arguments = self._arguments
         except AttributeError:
@@ -165,14 +168,18 @@ class Termtool(object):
         else:
             # Add arguments in the order they were declared.
             for arg_args, arg_kwargs in reversed(class_arguments):
-                parser.add_argument(*arg_args, **arg_kwargs)
+                global_parser.add_argument(*arg_args, **arg_kwargs)
+
+        parser = argparse.ArgumentParser(description=getattr(self, 'description', ''),
+            parents=[global_parser])
+        parser.set_defaults(subcommand='help')
 
         subparsers = parser.add_subparsers(dest='subcommand', title='subcommands', metavar='')
 
         # Add all the subcommands in asciibetical order by command name.
         for command in sorted(self._subcommands, key=lambda c: c._subcommand[0]):
             name, about_kwargs = command._subcommand
-            subparser = subparsers.add_parser(name, **about_kwargs)
+            subparser = subparsers.add_parser(name, parents=[global_parser], **about_kwargs)
 
             # Set the subparser's func so it becomes this command (callable)
             # when the user invokes this subparser.
