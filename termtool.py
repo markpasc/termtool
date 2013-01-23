@@ -11,29 +11,21 @@ from progressbar import ProgressBar
 __version__ = '1.1dev'
 
 
-def subcommand(*args, **kwargs):
+def subcommand(name=None, **kwargs):
     """Decorate an instance method as a tool subcommand.
 
     The function's own name is used as the subcommand name for the terminal
-    user to type. To use a different one, specify the name as the first
-    positional argument or the ``name`` kwarg to the `subcommand()` decorator.
+    user to type. To use a different one, specify the `name` argument to the
+    `subcommand()` decorator.
 
-    Any remaining keyword arguments are passed to the `add_parser()` method
+    The remaining keyword arguments are passed to the `add_parser()` method
     declaring the subcommand, so arguments to the `argparse.ArgumentParser`
     constructor are valid.
 
     """
     def _decor(fn):
         """Tag the decorated function with the subcommand settings to use later."""
-        pargs = list(args)
-        try:
-            name = pargs.pop(0)
-        except IndexError:
-            try:
-                name = kwargs.pop('name')
-            except KeyError:
-                name = fn.__name__
-        fn._subcommand = (name, pargs, kwargs)
+        fn._subcommand = (name or fn.__name__, kwargs)
         return fn
     return _decor
 
@@ -179,8 +171,8 @@ class Termtool(object):
 
         # Add all the subcommands in asciibetical order by command name.
         for command in sorted(self._subcommands, key=lambda c: c._subcommand[0]):
-            name, about_args, about_kwargs = command._subcommand
-            subparser = subparsers.add_parser(name, *about_args, **about_kwargs)
+            name, about_kwargs = command._subcommand
+            subparser = subparsers.add_parser(name, **about_kwargs)
 
             # Set the subparser's func so it becomes this command (callable)
             # when the user invokes this subparser.
