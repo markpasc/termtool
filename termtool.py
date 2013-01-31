@@ -142,6 +142,28 @@ class Termtool(object):
             config_args = [line.strip('\n') for line in config_file.readlines()]
         return config_args
 
+    class _LogLevelAddAction(argparse.Action):
+
+        """An `argparse` action for selecting a `logging` level."""
+
+        LEVELS = (logging.CRITICAL, logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG)
+
+        def __init__(self, option_strings, dest, const, default=None, required=False, help=None, metavar=None):
+            # Log level addition actions take no arguments.
+            super(Termtool._LogLevelAddAction, self).__init__(nargs=0,
+                option_strings=option_strings, dest=dest, const=const, default=default, required=required, help=help)
+
+        def __call__(self, parser, namespace, values, option_string=None):
+            level = getattr(namespace, self.dest, logging.WARNING)
+            index = self.LEVELS.index(level)
+            addend = self.const if self.const is not None else 1
+            try:
+                level = self.LEVELS[index + addend]
+            except IndexError:
+                pass
+            else:
+                setattr(namespace, self.dest, level)
+
     def build_arg_parser(self):
         """Build and return the `argparse.ArgumentParser` instance suitable for
         parsing arguments for this `Termtool` instance.
@@ -156,9 +178,9 @@ class Termtool(object):
         # specify the global options in a parent parser so they're valid both
         # before and after the subcommand.
         global_parser = argparse.ArgumentParser(add_help=False)
-        global_parser.set_defaults(verbosity=[2])
-        global_parser.add_argument('-v', dest='verbosity', action='append_const', const=1, help='be more verbose (stackable)')
-        global_parser.add_argument('-q', dest='verbosity', action='append_const', const=-1, help='be less verbose (stackable)')
+        global_parser.set_defaults(loglevel=logging.WARNING)
+        global_parser.add_argument('-v', dest='loglevel', action=self._LogLevelAddAction, const=1, help='be more verbose (stackable)')
+        global_parser.add_argument('-q', dest='loglevel', action=self._LogLevelAddAction, const=-1, help='be less verbose (stackable)')
         try:
             class_arguments = self._arguments
         except AttributeError:
@@ -206,9 +228,7 @@ class Termtool(object):
         4, `logging.DEBUG`.
 
         """
-        verbosity = sum(args.verbosity)
-        verbosity = 0 if verbosity < 0 else verbosity if verbosity < 4 else 4
-        log_level = (logging.CRITICAL, logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG)[verbosity]
+        log_level = args.loglevel
         logging.basicConfig(level=log_level, format='%(levelname)s: %(message)s')
         logging.info('Set log level to %s', logging.getLevelName(log_level))
 
