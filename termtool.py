@@ -190,8 +190,11 @@ class Termtool(object):
             for arg_args, arg_kwargs in reversed(class_arguments):
                 global_parser.add_argument(*arg_args, **arg_kwargs)
 
-        parser = argparse.ArgumentParser(description=getattr(self, 'description', ''),
-            parents=[global_parser])
+        try:
+            description = self.description
+        except AttributeError:
+            description = self.__doc__
+        parser = argparse.ArgumentParser(description=description, parents=[global_parser])
         parser.set_defaults(subcommand='help')
 
         subparsers = parser.add_subparsers(dest='subcommand', title='subcommands', metavar='')
@@ -199,7 +202,12 @@ class Termtool(object):
         # Add all the subcommands in asciibetical order by command name.
         for command in sorted(self._subcommands, key=lambda c: c._subcommand[0]):
             name, about_kwargs = command._subcommand
-            subparser = subparsers.add_parser(name, parents=[global_parser], **about_kwargs)
+            try:
+                description = about_kwargs.pop('description')
+            except KeyError:
+                description = command.__doc__
+            subparser = subparsers.add_parser(name, parents=[global_parser],
+                description=description, **about_kwargs)
 
             # Set the subparser's func so it becomes this command (callable)
             # when the user invokes this subparser.
