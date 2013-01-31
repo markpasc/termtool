@@ -216,16 +216,14 @@ class Termtool(object):
 
         return parser
 
-    def _configure_logging(self, args):
-        """Configure the `logging` module to the log level requested in the
-        specified `argparse.Namespace` instance.
+    def configure(self, args):
+        """Configure the tool according to the command line arguments.
 
-        The `args` namespace's ``verbosity`` should be a list of integers, the
-        sum of which specifies which log level to use: sums from 0 to 4
-        inclusive map to the standard `logging` log levels from
-        `logging.CRITICAL` to `logging.DEBUG`. If the ``verbosity`` list sums
-        to less than 0, level `logging.CRITICAL` is still used; for more than
-        4, `logging.DEBUG`.
+        Override this method to configure your tool with the values of any
+        other options it supports.
+
+        This implementation configures the `logging` module to the log level
+        requested by the user through the ``-v`` and ``-q`` options.
 
         """
         log_level = args.loglevel
@@ -255,7 +253,7 @@ class Termtool(object):
         parser = self.build_arg_parser()
         args = parser.parse_args(args)
 
-        self._configure_logging(args)
+        self.configure(args)
 
         # The callable subcommand is parsed out as the "func" arg.
         try:
