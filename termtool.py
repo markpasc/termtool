@@ -119,7 +119,7 @@ class Termtool(object):
         filepath = os.path.expanduser('~/.%s' % appname)
 
         # Don't let anybody else read the config file.
-        os.umask(077)
+        os.umask(0o077)
         with open(filepath, 'w') as config_file:
             for arg in args:
                 config_file.write(arg)
