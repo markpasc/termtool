@@ -101,6 +101,9 @@ class Termtool(object):
     progressbar = ProgressBar
     table = _PrettierTable
 
+    log_format = '%(levelname)s: %(message)s'
+    """The logging format string that `configure()` will configure logging with."""
+
     def write_config_file(self, *args):
         """Write out a config file containing the given arguments.
 
@@ -224,6 +227,30 @@ class Termtool(object):
 
         return parser
 
+    class _NoColorLogFormatter(logging.Formatter):
+
+        def format(self, record):
+            record.levelcolor = ''
+            record.resetcolor = ''
+            return super(Termtool._NoColorLogFormatter, self).format(record)
+
+    class _ColorLogFormatter(logging.Formatter):
+
+        color_for_level = {
+            logging.DEBUG:    '32',  # green
+            logging.INFO:     '37',  # white
+            logging.WARNING:  '33',  # yellow
+            logging.ERROR:    '31',  # red
+            logging.CRITICAL: '35',  # magenta
+        }
+
+        def format(self, record):
+            color = self.color_for_level.get(record.levelno)
+            if color is not None:
+                record.levelcolor = u'\033[1;%sm' % color
+            record.resetcolor = u'\033[0m'
+            return super(Termtool._ColorLogFormatter, self).format(record)
+
     def configure(self, args):
         """Configure the tool according to the command line arguments.
 
@@ -231,11 +258,31 @@ class Termtool(object):
         other options it supports.
 
         This implementation configures the `logging` module to the log level
-        requested by the user through the ``-v`` and ``-q`` options.
+        requested by the user through the ``-v`` and ``-q`` options. It also
+        configures logging to go to stderr, formatted according to the
+        instance's `log_format` attribute.
+
+        Additionally, logging is configured to provide these additional format
+        strings:
+
+        %(levelcolor)s    If stderr is a terminal, an ANSI color code
+                          appropriate for the level of the logged record.
+        %(resetcolor)s    If stderr is a terminal, an ANSI color reset code.
 
         """
         log_level = args.loglevel
-        logging.basicConfig(level=log_level, format='%(levelname)s: %(message)s')
+        root_logger = logging.getLogger()
+        root_logger.setLevel(log_level)
+
+        log_format = self.log_format
+        handler = logging.StreamHandler()  # using sys.stderr
+        if hasattr(sys.stderr, 'isatty') and sys.stderr.isatty():
+            formatter_class = self._ColorLogFormatter
+        else:
+            formatter_class = self._NoColorLogFormatter
+        handler.setFormatter(formatter_class(log_format))
+        root_logger.addHandler(handler)
+
         logging.info('Set log level to %s', logging.getLevelName(log_level))
 
     def main(self, argv):
