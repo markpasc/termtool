@@ -102,7 +102,7 @@ class Termtool(object):
     table = _PrettierTable
 
     log_format = '%(levelname)s: %(message)s'
-    """The logging format string that `configure()` will configure logging with."""
+    """The logging format string that `configure_tool()` will configure logging with."""
 
     def write_config_file(self, *args):
         """Write out a config file containing the given arguments.
@@ -251,7 +251,7 @@ class Termtool(object):
             record.resetcolor = u'\033[0m'
             return super(Termtool._ColorLogFormatter, self).format(record)
 
-    def configure(self, args):
+    def configure_tool(self, args):
         """Configure the tool according to the command line arguments.
 
         Override this method to configure your tool with the values of any
@@ -308,7 +308,7 @@ class Termtool(object):
         parser = self.build_arg_parser()
         args = parser.parse_args(args)
 
-        self.configure(args)
+        self.configure_tool(args)
 
         # The callable subcommand is parsed out as the "func" arg.
         try:
