@@ -1,11 +1,8 @@
+import argparse
 import logging
 import os
 import os.path
 import sys
-
-import argparse
-from prettytable import PrettyTable
-from progressbar import ProgressBar
 
 
 __version__ = '1.1dev'
@@ -51,21 +48,6 @@ def argument(*args, **kwargs):
     return _decor
 
 
-class _PrettierTable(PrettyTable):
-
-    def __init__(self, field_names=None, **kwargs):
-        PrettyTable.__init__(self, field_names, **kwargs)
-        try:
-            self.set_field_align
-        except AttributeError:
-            # We must be using PrettyTable 0.6+.
-            self.align = 'l'
-        else:
-            if field_names is not None:
-                for field in field_names:
-                    self.set_field_align(field, 'l')
-
-
 class _TermtoolMetaclass(type):
 
     """Metaclass for `Termtool` classes.
@@ -77,12 +59,12 @@ class _TermtoolMetaclass(type):
     """
 
     def __new__(cls, name, bases, attrs):
-        attrs['_subcommands'] = [attr for attr in attrs.itervalues()
+        attrs['_subcommands'] = [attr for attr in attrs.values()
             if hasattr(attr, '_subcommand')]
         return super(_TermtoolMetaclass, cls).__new__(cls, name, bases, attrs)
 
 
-class Termtool(object):
+class Termtool(object, metaclass=_TermtoolMetaclass):
 
     """A terminal tool for performing actions at a command line.
 
@@ -96,10 +78,42 @@ class Termtool(object):
 
     """
 
-    __metaclass__ = _TermtoolMetaclass
+    try:
+        from progressbar import ProgressBar as progressbar
+    except ImportError:
+        pass
 
-    progressbar = ProgressBar
-    table = _PrettierTable
+    try:
+        from prettytable import PrettyTable as table
+    except ImportError:
+        class _TinyTable(object):
+            def __init__(self, labels):
+                self.rows = [labels]
+            def add_row(self, values):
+                self.rows.append(values)
+            def __str__(self):
+                col_sizes = [max(len(self.rows[j][i]) for j in range(len(self.rows))) for i in range(len(self.rows[0]))]
+                format_str = '  '.join('{{: <{}}}'.format(size) for size in col_sizes)
+                return '\n'.join(format_str.format(*values) for values in self.rows)
+
+        table = _TinyTable
+
+    else:
+        class _PrettierTable(PrettyTable):
+
+            def __init__(self, field_names=None, **kwargs):
+                PrettyTable.__init__(self, field_names, **kwargs)
+                try:
+                    self.set_field_align
+                except AttributeError:
+                    # We must be using PrettyTable 0.6+.
+                    self.align = 'l'
+                else:
+                    if field_names is not None:
+                        for field in field_names:
+                            self.set_field_align(field, 'l')
+
+        table = _PrettierTable
 
     log_format = '%(levelname)s: %(message)s'
     """The logging format string that `configure_tool()` will configure logging with."""
@@ -247,8 +261,8 @@ class Termtool(object):
         def format(self, record):
             color = self.color_for_level.get(record.levelno)
             if color is not None:
-                record.levelcolor = u'\033[1;%sm' % color
-            record.resetcolor = u'\033[0m'
+                record.levelcolor = '\033[1;%sm' % color
+            record.resetcolor = '\033[0m'
             return super(Termtool._ColorLogFormatter, self).format(record)
 
     def configure_tool(self, args):
