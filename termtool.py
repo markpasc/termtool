@@ -1,9 +1,9 @@
+import argparse
 import logging
 import os
 import os.path
 import sys
 
-import argparse
 from prettytable import PrettyTable
 from progressbar import ProgressBar
 
@@ -77,12 +77,15 @@ class _TermtoolMetaclass(type):
     """
 
     def __new__(cls, name, bases, attrs):
-        attrs['_subcommands'] = [attr for attr in attrs.itervalues()
+        attrs['_subcommands'] = [attr for attr in attrs.values()
             if hasattr(attr, '_subcommand')]
         return super(_TermtoolMetaclass, cls).__new__(cls, name, bases, attrs)
 
 
-class Termtool(object):
+_TermtoolSuperclass = _TermtoolMetaclass('_TermtoolSuperclass', (object,), {})
+
+
+class Termtool(_TermtoolSuperclass):
 
     """A terminal tool for performing actions at a command line.
 
@@ -95,8 +98,6 @@ class Termtool(object):
     Instantiate your class and call `run()` to run as a command line tool.
 
     """
-
-    __metaclass__ = _TermtoolMetaclass
 
     progressbar = ProgressBar
     table = _PrettierTable
@@ -247,8 +248,8 @@ class Termtool(object):
         def format(self, record):
             color = self.color_for_level.get(record.levelno)
             if color is not None:
-                record.levelcolor = u'\033[1;%sm' % color
-            record.resetcolor = u'\033[0m'
+                record.levelcolor = '\033[1;%sm' % color
+            record.resetcolor = '\033[0m'
             return super(Termtool._ColorLogFormatter, self).format(record)
 
     def configure_tool(self, args):
