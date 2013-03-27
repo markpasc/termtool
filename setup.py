@@ -13,7 +13,7 @@ long_description = """
 
 setup(
     name='termtool',
-    version='1.1dev',
+    version='1.1',
     description='Declarative terminal tool programming',
     author='Mark Paschal',
     author_email='markpasc@markpasc.org',
@@ -28,6 +28,7 @@ setup(
         'Natural Language :: English',
         'Operating System :: Unix',
         'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 3',
         'Topic :: Software Development :: Libraries :: Application Frameworks',
     ],
 
