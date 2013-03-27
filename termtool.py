@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 import os.path
+import re
 import sys
 
 
@@ -107,7 +108,7 @@ class Termtool(_TermtoolSuperclass):
         # Use our tiny replacement, which means we really can't use any of prettytable's specific features, but I guess we'll live.
         table = _TinyTable
 
-    log_format = '%(levelname)s: %(message)s'
+    log_format = '%(levelcolor)s%(levelname)s%(resetcolor)s %(message)s'
     """The logging format string that `configure_tool()` will configure logging with."""
 
     def write_config_file(self, *args):
@@ -190,6 +191,8 @@ class Termtool(_TermtoolSuperclass):
         global_parser.set_defaults(loglevel=logging.WARNING)
         global_parser.add_argument('-v', dest='loglevel', action=self._LogLevelAddAction, const=1, help='be more verbose (stackable)')
         global_parser.add_argument('-q', dest='loglevel', action=self._LogLevelAddAction, const=-1, help='be less verbose (stackable)')
+        global_parser.add_argument('--no-color', dest='color', action='store_false', help='use no color in log')
+
         try:
             class_arguments = self._arguments
         except AttributeError:
@@ -235,10 +238,14 @@ class Termtool(_TermtoolSuperclass):
 
     class _NoColorLogFormatter(logging.Formatter):
 
+        STRIP_COLOR = re.compile(r'\033\[[^m]+m')
+        """The compiled regular expression to remove ANSI color codes from a string."""
+
         def format(self, record):
             record.levelcolor = ''
             record.resetcolor = ''
-            return super(Termtool._NoColorLogFormatter, self).format(record)
+            logline = super(Termtool._NoColorLogFormatter, self).format(record)
+            return self.STRIP_COLOR.sub('', logline)
 
     class _ColorLogFormatter(logging.Formatter):
 
@@ -271,9 +278,12 @@ class Termtool(_TermtoolSuperclass):
         Additionally, logging is configured to provide these additional format
         strings:
 
-        %(levelcolor)s    If stderr is a terminal, an ANSI color code
-                          appropriate for the level of the logged record.
-        %(resetcolor)s    If stderr is a terminal, an ANSI color reset code.
+        %(levelcolor)s    If color is enabled, an ANSI color code appropriate
+                          for the level of the logged record.
+        %(resetcolor)s    If color is enabled, an ANSI color reset code.
+
+        Color is enabled if stderr is a terminal and the ``--no-color`` option
+        was not provided.
 
         """
         log_level = args.loglevel
@@ -282,7 +292,7 @@ class Termtool(_TermtoolSuperclass):
 
         log_format = self.log_format
         handler = logging.StreamHandler()  # using sys.stderr
-        if hasattr(sys.stderr, 'isatty') and sys.stderr.isatty():
+        if args.color and hasattr(sys.stderr, 'isatty') and sys.stderr.isatty():
             formatter_class = self._ColorLogFormatter
         else:
             formatter_class = self._NoColorLogFormatter
