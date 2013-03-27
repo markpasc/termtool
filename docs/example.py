@@ -7,7 +7,7 @@ from termtool import Termtool, subcommand, argument
 
 class Example(Termtool):
 
-    description = 'A script that frobs or displays bazzes'
+    """A script that frobs or displays bazzes."""
 
     @subcommand()
     def loglevel(self, args):
@@ -17,17 +17,17 @@ class Example(Termtool):
         logging.info('info')
         logging.debug('debug')
 
-    @subcommand(help='frobs a baz')
+    @subcommand(help='frob a baz')
     @argument('baz', help='the baz to frob')
     def frob(self, args):
-        # do the work to frob a baz
+        """Do the work to frob a baz."""
         pass
 
-    @subcommand(help='displays a baz')
+    @subcommand(help='display a baz')
     @argument('baz', help='the baz to display')
     @argument('--csv', action='store_true', help='sets display mode to CSV')
     def display(self, args):
-        # display the baz
+        """Display a baz."""
         pass
 
 

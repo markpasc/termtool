@@ -24,19 +24,19 @@ A script like this::
 
     class Example(Termtool):
 
-        description = 'A script that frobs or displays bazzes'
+        """A script that frobs or displays bazzes."""
 
-        @subcommand(help='frobs a baz')
+        @subcommand(help='frob a baz')
         @argument('baz', help='the baz to frob')
         def frob(self, args):
-            # do the work to frob a baz
+            """Do the work to frob a baz."""
             pass
 
-        @subcommand(help='displays a baz')
+        @subcommand(help='display a baz')
         @argument('baz', help='the baz to display')
         @argument('--csv', action='store_true', help='sets display mode to CSV')
         def display(self, args):
-            # display the baz
+            """Display a baz."""
             pass
 
 
@@ -48,26 +48,32 @@ creates a command like this::
     $ example --help
     usage: example [-h] [-v] [-q] COMMAND ...
 
-    A script that frobs or displays bazzes
+    A script that frobs or displays bazzes.
 
     optional arguments:
       -h, --help  show this help message and exit
       -v          be more verbose (stackable)
       -q          be less verbose (stackable)
+      --no-color  use no color in log
 
     subcommands:
-      COMMAND
-        frob      frobs a baz
-        display   displays a baz
+
+        frob      frob a baz
+        display   display a baz
 
     $ example display --help
-    usage: example.py display [-h] [--csv] baz
+    usage: example.py display [-h] [-v] [-q] [--csv] baz
+
+    Display a baz.
 
     positional arguments:
       baz         the baz to display
 
     optional arguments:
       -h, --help  show this help message and exit
+      -v          be more verbose (stackable)
+      -q          be less verbose (stackable)
+      --no-color  use no color in log
       --csv       sets display mode to CSV
 
     $
@@ -84,13 +90,13 @@ Arguments that should be available in general to all commands can be specified a
    @argument('baz', help='the baz to frob or display')
    class Example(Termtool):
 
-       description = 'A script that frobs or displays bazzes'
+       """A script that frobs or displays bazzes."""
 
 or by invoking :func:`~termtool.argument` afterward, for compatibility with Python 2.5::
 
    class Example(Termtool):
 
-       description = 'A script that frobs or displays bazzes'
+       """A script that frobs or displays bazzes."""
 
        ...
 
@@ -100,11 +106,13 @@ or by invoking :func:`~termtool.argument` afterward, for compatibility with Pyth
 Logging
 =======
 
-:mod:`termtool` tools provide automatic support for configuring the :mod:`logging` module. Log messages are formatted simply with the level and the message, and are printed to standard error.
+:mod:`termtool` tools provide automatic support for configuring the :mod:`logging` module. Log messages are logged to standard error, and formatted using the `Termtool` instance's ``log_format`` attribute.
 
-People using your tool can use the `-v` and `-q` arguments to change the log level. By default, messages at `WARN` and lower logging levels are displayed. Each `-v` argument adds one more verbose level of logging, and each `-q` argument removes one level, down to `CRITICAL` level. Critical errors are always displayed.
+People using your tool can use the `-v` and `-q` arguments to change the log level. By default, messages at `WARN` and lower logging levels are displayed. Each `-v` argument adds one more verbose level of logging, and each `-q` argument removes one level, down to `CRITICAL` level. Critical log messages are always displayed.
 
 For example, given the command::
+
+   log_format = '%(levelname)s: %(message)s'
 
    @subcommand()
    def loglevel(self, args):
@@ -138,6 +146,10 @@ you would see output such as::
    $ example -qqqqqvvvvvqvqvqqv loglevel
    CRITICAL: critical
    ERROR: error
+
+If standard error is a terminal, the leading level prefixes in the default log format are color coded with ANSI color codes. Formats can also contain ``%(levelcolor)s`` and ``%(resetcolor)s`` formatting tokens. When color logging is enabled, these are the appropriate ANSI color code for the logged message's level and the ANSI code to reset color, respectively.
+
+Color logging is disabled when standard error is not a terminal, or if the person using your tool provides the ``--no-color`` option. The color formatting codes are ignored in that case (but are still valid in your format strings).
 
 
 Displaying tables
