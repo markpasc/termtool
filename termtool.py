@@ -4,9 +4,6 @@ import os
 import os.path
 import sys
 
-from prettytable import PrettyTable
-from progressbar import ProgressBar
-
 
 __version__ = '1.1dev'
 
@@ -51,19 +48,18 @@ def argument(*args, **kwargs):
     return _decor
 
 
-class _PrettierTable(PrettyTable):
+class _TinyTable(object):
 
-    def __init__(self, field_names=None, **kwargs):
-        PrettyTable.__init__(self, field_names, **kwargs)
-        try:
-            self.set_field_align
-        except AttributeError:
-            # We must be using PrettyTable 0.6+.
-            self.align = 'l'
-        else:
-            if field_names is not None:
-                for field in field_names:
-                    self.set_field_align(field, 'l')
+    def __init__(self, labels):
+        self.rows = [labels]
+
+    def add_row(self, values):
+        self.rows.append(values)
+
+    def __str__(self):
+        col_sizes = [max(len(self.rows[j][i]) for j in range(len(self.rows))) for i in range(len(self.rows[0]))]
+        format_str = '  '.join('{{: <{}}}'.format(size) for size in col_sizes)
+        return '\n'.join(format_str.format(*values) for values in self.rows)
 
 
 class _TermtoolMetaclass(type):
@@ -99,8 +95,17 @@ class Termtool(_TermtoolSuperclass):
 
     """
 
-    progressbar = ProgressBar
-    table = _PrettierTable
+    try:
+        from progressbar import ProgressBar as progressbar
+    except ImportError:
+        # Well, don't use it I guess?
+        pass
+
+    try:
+        from prettytable import PrettyTable as table
+    except ImportError:
+        # Use our tiny replacement, which means we really can't use any of prettytable's specific features, but I guess we'll live.
+        table = _TinyTable
 
     log_format = '%(levelname)s: %(message)s'
     """The logging format string that `configure_tool()` will configure logging with."""
